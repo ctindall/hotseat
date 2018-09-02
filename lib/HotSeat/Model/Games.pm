@@ -59,7 +59,7 @@ sub create_game {
     }
 
     unless (-e "$game_dir/system") {
-	puke_file "$game_dir/system", $rom_name;
+	puke_file "$game_dir/system", $system;
     }
 
     return 1;
@@ -71,8 +71,9 @@ sub get_game {
     my $exists = (-d $game_dir);
 
     my $locked = 0;
-    my $locked_by = "";
-    my $rom = "";
+    my $locked_by;
+    my $rom_name;
+    my $system;
     my $state_file = "";
 
     if (!$exists) {
@@ -81,12 +82,12 @@ sub get_game {
     
     $locked = (-e "$game_dir/lock");
 
-    if (-e "$game_dir/save.sna") {
-	$rom = "$game_dir/save.sna"
-    }
-
     if (-e "$game_dir/rom_name") {
-	$rom = slurp_file "$game_dir/rom_name";
+	$rom_name = slurp_file "$game_dir/rom_name";
+    }    
+
+    if (-e "$game_dir/system") {
+	$system = slurp_file "$game_dir/system";
     }    
     
     if ($exists && $locked) {
@@ -104,6 +105,7 @@ sub get_game {
 	lock_file => "$game_dir/lock",
 	state_file => "$game_dir/save.sna",
 	rom_name => "pokemon_blue.gb",
+	system => $system,
     );
 }
 

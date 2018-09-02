@@ -23,7 +23,8 @@ sub startup {
 	    game_id => $game{'game_id'},
 	    locked => $game{'locked'} ? \1 : \0,
 	    locked_by => $game{'locked_by'},
-	    filename => $game{'rom_name'},
+	    rom_name => $game{'rom_name'},
+	    system => $game{'system'},
 	});
     });
 
@@ -41,7 +42,8 @@ sub startup {
 	    game_id => $game{'game_id'},
 	    locked => $game{'locked'} ? \1 : \0,
 	    locked_by => $game{'locked_by'},
-	    filename => $game{'rom_name'},
+	    rom_name => $game{'rom_name'},
+	    system => $game{'system'},
         });
     });
 
@@ -54,7 +56,8 @@ sub startup {
 	    game_id => $game{'game_id'},
 	    locked => $game{'locked'} ? \1 : \0,
 	    locked_by => $game{'locked_by'},
-	    filename => $game{'rom_name'},
+	    rom_name => $game{'rom_name'},
+	    system => $game{'system'},
         });
    });
     
