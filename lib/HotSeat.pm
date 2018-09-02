@@ -68,6 +68,7 @@ sub startup {
     $r->post('/game/:game_id/state' => sub {
 	my $c = shift;
 	my $game_id = $c->stash('game_id') + 0;
+	my $user = $c->param('user');
 	my %game = get_game($game_id);
 
 	my $state_file = Mojo::Upload->new;
@@ -75,6 +76,18 @@ sub startup {
 	$state_file->filename('state.sna');
 	$state_file->move_to($game{'state_file'});
 
+	if($game{'locked'} && $game{'locked_by'} ne $user) {
+	    $c->render(json => {
+		game_id => $game{'game_id'},
+		locked => $game{'locked'} ? \1 : \0,
+		locked_by => $game{'locked_by'},
+		rom_name => $game{'rom_name'},
+		system => $game{'system'},
+	     }, status => 403);
+
+	    return;
+	}
+	
 	$c->render(json => {
 	    game_id => $game{'game_id'},
 	    locked => $game{'locked'} ? \1 : \0,
@@ -88,11 +101,9 @@ sub startup {
 	my $c = shift;
 	my $game_id = $c->stash('game_id') + 0;
 	my %game = get_game($game_id);
-
-	$c->render_file(
-	    filepath => $game{'state_file'},
-	    filename => "state.sna",
-	);
+		
+	$c->render_file( filepath => $game{'state_file'},
+			 filename => "state.sna");
     });
 };
 
