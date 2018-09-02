@@ -5,9 +5,12 @@ use HotSeat::Model::Games;
 
 sub startup {
     my $self = shift;
-
+    
     $self->secrets(['-1109089652486567240']);
     $self->plugin('RenderFile');
+
+    my $config = $self->plugin('Config');
+    set_games_dir($config->{games_dir});
     
     my $r = $self->routes;
 

@@ -1,6 +1,6 @@
 package HotSeat::Model::Games;
 use Exporter 'import';
-our @EXPORT = qw( set_basedir slurp_file puke_file create_game get_game lock_game unlock_game );
+our @EXPORT = qw( set_games_dir slurp_file puke_file create_game get_game lock_game unlock_game );
 
 use strict;
 use warnings;
@@ -11,7 +11,7 @@ use Cwd;
 
 my $basedir = Cwd::abs_path(dirname($0));
 
-sub set_basedir {
+sub set_games_dir {
     $basedir = shift;
 }
 
