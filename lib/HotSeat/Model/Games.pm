@@ -9,10 +9,10 @@ use File::Basename;
 use File::Path qw( make_path ); 
 use Cwd;
 
-my $basedir = Cwd::abs_path(dirname($0));
+my $games_dir = Cwd::abs_path(dirname($0))."/games";
 
 sub set_games_dir {
-    $basedir = shift;
+    $games_dir = shift;
 }
 
 sub slurp_file {
@@ -40,7 +40,7 @@ sub create_game {
     my $rom_name = shift;
     my $system = shift;
 
-    my $game_dir = "$basedir/games/$game_id";
+    my $game_dir = "$games_dir/$game_id";
 
     unless ($rom_name) {
 	$rom_name = "pokemon_blue.gb";
@@ -67,7 +67,7 @@ sub create_game {
 
 sub get_game {
     my $game_id = shift;
-    my $game_dir = "$basedir/games/$game_id";
+    my $game_dir = "$games_dir/$game_id";
     my $exists = (-d $game_dir);
 
     my $locked = 0;

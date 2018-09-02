@@ -1,6 +1,7 @@
 package HotSeat;
 use lib 'lib';
 use Mojo::Base 'Mojolicious';
+use Mojo::Upload;
 use HotSeat::Model::Games;
 
 sub startup {
@@ -60,6 +61,28 @@ sub startup {
 	    system => $game{'system'},
         });
    });
+
+
+    #savestate upload
+
+    $r->post('/game/:game_id/state' => sub {
+	my $c = shift;
+	my $game_id = $c->stash('game_id') + 0;
+	my %game = get_game($game_id);
+
+	my $state_file = Mojo::Upload->new;
+	$state_file->asset($c->req->upload('save_state'));
+	$state_file->filename('state.sna');
+	$state_file->move_to($game{'state_file'});
+
+	$c->render(json => {
+	    game_id => $game{'game_id'},
+	    locked => $game{'locked'} ? \1 : \0,
+	    locked_by => $game{'locked_by'},
+	    rom_name => $game{'rom_name'},
+	    system => $game{'system'},
+	});
+    });
     
     $r->get('/game/:game_id/state' => sub {
 	my $c = shift;
@@ -68,7 +91,7 @@ sub startup {
 
 	$c->render_file(
 	    filepath => $game{'state_file'},
-	    filename => "$game{'rom_name'}.sna",
+	    filename => "state.sna",
 	);
     });
 };
