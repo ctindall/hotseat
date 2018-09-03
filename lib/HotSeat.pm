@@ -19,6 +19,14 @@ sub startup {
 	my $c = shift;
 	my $game_id = $c->stash('game_id') + 0; #ensure game_id is a number
 	my %game = get_game($game_id);
+
+	if (!$game{'exists'}) {
+	    $c->render(json => {
+		game_id => $game_id,
+		exists => \0,
+		error => "No such game",
+	    }, status => 404);
+	}
 	
 	$c->render(json => {
 	    game_id => $game{'game_id'},
@@ -29,23 +37,73 @@ sub startup {
 	});
     });
 
+    $r->put('/game/:game_id' => sub { 
+	my $c = shift;
+	my $game_id = $c->stash('game_id') + 0; #ensure game_id is a number
+	my $rom_name = $c->param('rom_name');
+	my $system = $c->param('system');
+	my $owned_by = $c->param('owned_by');
+	my $password = $c->param('password');
+	my %game = get_game($game_id);
+	my $success = 0;
+
+	unless (defined $rom_name && defined $system && defined $owned_by && defined $password) {
+	    $c->render(json => {
+		game_id => $game_id,
+		error => "Could not create game: password, owned_by, rom_name, & system are required.",
+		       }, status => 400);
+
+	    return;
+	}
+	
+	if (!$game{'exists'}) {
+	    $success  = create_game $game_id, $rom_name, $system, $owned_by, $password;
+	    %game = get_game $game_id;
+	}
+
+	if ($success) {
+	    $c->render(json => {
+		game_id => $game{'game_id'},
+		locked => $game{'locked'} ? \1 : \0,
+		locked_by => $game{'locked_by'},
+		rom_name => $game{'rom_name'},
+		system => $game{'system'},
+		owned_by => $game{'owned_by'}
+	     }, status => 201);
+
+	    return;
+	}
+	    
+	$c->render(json => {
+	    game_id => $game_id,
+	    error => "Could not create game.",
+	}, status => 400);
+    });
+    
     $r->post('/game/:game_id/lock' => sub {
 	my $c = shift;
 	my $game_id = $c->stash('game_id') + 0; #ensure game_id is a number
 	my $user = $c->param('user');
 	my %game = get_game($game_id);
-	
-	if ( !$game{'locked'} ) {
-	    %game = lock_game($game_id, $user);
+
+	unless ($game{'exists'}) {
+	    $c->render(json => {
+		game_id => $game_id,
+		error => "No such game",	    
+	    }, status => 404);
+
+	    return;
 	}
-    
+	
+	%game = lock_game $game_id, $user;
+	
 	$c->render(json => {
 	    game_id => $game{'game_id'},
 	    locked => $game{'locked'} ? \1 : \0,
 	    locked_by => $game{'locked_by'},
 	    rom_name => $game{'rom_name'},
 	    system => $game{'system'},
-        });
+        }, status => 201);
     });
 
     $r->delete('/game/:game_id/lock' => sub {
