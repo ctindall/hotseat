@@ -129,11 +129,6 @@ sub startup {
 	my $user = $c->param('user');
 	my %game = get_game($game_id);
 
-	my $state_file = Mojo::Upload->new;
-	$state_file->asset($c->req->upload('save_state'));
-	$state_file->filename('state.sna');
-	$state_file->move_to($game{'state_file'});
-
 	if($game{'locked'} && $game{'locked_by'} ne $user) {
 	    $c->render(json => {
 		game_id => $game{'game_id'},
@@ -145,6 +140,9 @@ sub startup {
 
 	    return;
 	}
+	
+	my $state_file = $c->param('save_state');
+	$state_file->move_to(`mktemp`);
 	
 	$c->render(json => {
 	    game_id => $game{'game_id'},
