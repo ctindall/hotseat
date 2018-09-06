@@ -37,8 +37,12 @@ $t->put_ok('/game/321' => form => { password => "goodpass",
 #     ->json_is('/rom_name', 'pokemon_blue.gb') #default ROM
 #     ->json_is('/system', 'gameboy'); #default system
 
+#try to create a lock with no username
+$t->post_ok('/game/321/lock' => form => {password => "goodpass"})
+    ->status_is(400);
+
 #create a lock for the game
-$t->post_ok('/game/321/lock' => form => {user => 'cam'})
+$t->post_ok('/game/321/lock' => form => {password => "goodpass", user=> "ted"})
     ->status_is(201)
     ->json_has('/locked')
     ->json_has('/locked_by')
@@ -46,10 +50,10 @@ $t->post_ok('/game/321/lock' => form => {user => 'cam'})
     ->json_has('/system')
     
     ->json_is('/locked' => \1)
-    ->json_is('/locked_by' => 'cam');
+    ->json_is('/locked_by' => 'ted');
 
 #delete the lock
-$t->delete_ok('/game/321/lock')
+$t->delete_ok('/game/321/lock' => form => {password => "goodpass"})
     ->status_is(200)
     ->json_has('/locked')
     ->json_has('/locked_by')

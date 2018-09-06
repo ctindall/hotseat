@@ -1,6 +1,5 @@
 package HotSeat::Model::Games;
-use Exporter 'import';
-our @EXPORT = qw( set_games_dir slurp_file puke_file create_game get_game lock_game unlock_game );
+our @EXPORT = qw( new set_games_dir create_game get_game lock_game unlock_game );
 
 use strict;
 use warnings;
@@ -9,12 +8,7 @@ use File::Basename;
 use File::Path qw( make_path ); 
 use Cwd;
 
-my $games_dir = Cwd::abs_path(dirname($0))."/games";
-
-sub set_games_dir {
-    $games_dir = shift;
-}
-
+# UTIL (not exported)
 sub slurp_file {
     my $filename = shift;
     open(my $fh, '<', $filename);
@@ -35,7 +29,18 @@ sub puke_file {
     }
 }
 
+# API
+my $games_dir = Cwd::abs_path(dirname($0))."/games";
+
+sub new { bless {}, shift }
+
+sub set_games_dir {
+    $games_dir = shift;
+}
+
 sub get_game {
+    my $self = shift;
+    
     my $game_id = shift;
     my $game_dir = "$games_dir/$game_id";
     my $exists = (-d $game_dir);
@@ -93,6 +98,8 @@ sub get_game {
 }
 
 sub create_game {
+    my $self = shift;
+    
     my $game_id = shift;
     my $rom_name = shift;
     my $system = shift;
@@ -147,6 +154,8 @@ sub create_game {
 }
 
 sub lock_game {
+    my $self = shift;
+    
     my $game_id = shift;
     my $user = shift; 
     my %game = get_game $game_id;
@@ -157,6 +166,8 @@ sub lock_game {
 }
 
 sub unlock_game {
+    my $self = shift;
+    
     my $game_id = shift;
     my %game = get_game($game_id);
 
@@ -166,5 +177,6 @@ sub unlock_game {
     
     return get_game($game_id);
 }
+
 
 1;

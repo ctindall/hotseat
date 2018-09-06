@@ -51,7 +51,7 @@ sub startup {
 	    $c->render(json => {
 		game_id => $game_id,
 		error => "Could not create game: password, owned_by, rom_name, & system are required.",
-		       }, status => 400);
+	     }, status => 400);
 
 	    return;
 	}
@@ -84,6 +84,7 @@ sub startup {
 	my $c = shift;
 	my $game_id = $c->stash('game_id') + 0; #ensure game_id is a number
 	my $user = $c->param('user');
+	my $pass = $c->param('password');
 	my %game = get_game($game_id);
 
 	unless ($game{'exists'}) {
@@ -91,6 +92,24 @@ sub startup {
 		game_id => $game_id,
 		error => "No such game",	    
 	    }, status => 404);
+
+	    return;
+	}
+
+	unless (defined $pass && $game{'password'} eq $pass) {
+	    $c->render(json => {
+		game_id => $game_id,
+		error => "Bad password.",	    
+	    }, status => 403);
+
+	    return;
+	}
+	
+	unless (defined $user) {
+	    $c->render(json => {
+		game_id => $game_id,
+		error => "User required.",	    
+	    }, status => 400);
 
 	    return;
 	}
@@ -103,6 +122,7 @@ sub startup {
 	    locked_by => $game{'locked_by'},
 	    rom_name => $game{'rom_name'},
 	    system => $game{'system'},
+	    owned_by => $game{'owned_by'}
         }, status => 201);
     });
 
