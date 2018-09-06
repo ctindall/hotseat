@@ -1,11 +1,12 @@
-package HotSeat::Model::Games;
+package HotSeat::Model::GameManager;
 our @EXPORT = qw( new set_games_dir create_game get_game lock_game unlock_game );
 
 use strict;
 use warnings;
+use v5.18;
 
 use File::Basename;
-use File::Path qw( make_path ); 
+use File::Path qw( make_path );
 use Cwd;
 
 # UTIL (not exported)
@@ -42,10 +43,11 @@ sub new {
 }
 
 sub games_dir {
-    my $self = shift;
-
-    if (@_) {
-	$self->{games_dir} = shift;
+    my ($self, $dir) = @_;
+    
+    if ($dir) {
+	chomp($dir);
+	$self->{games_dir} = $dir;
     }
 
     return $self->{games_dir};
@@ -110,19 +112,31 @@ sub get_game {
     );
 }
 
-sub create_game {
-    my $self = shift;
+sub free_id {
+    my $dir = shift;
+    my $dh;
+
+    die "$dir doesn't exist" if ! -e $dir;
+    die "$dir isn't a directory" if ! -d $dir;
     
-    my $game_id = shift;
-    my $rom_name = shift;
-    my $system = shift;
-    my $owned_by = shift;
-    my $password = shift;
+    opendir($dh, $dir) or die "can't open $dir";
+    
+    my @dirs = sort { $a <=> $b } 
+               grep { $_ ne "." && $_ ne ".." } readdir($dh);
 
-    #double check game doesn't already exist so we don't clobber it
-    my %game = $self->get_game($game_id);
-    return 0 if $game{'exists'};
+    closedir($dh);
 
+    return $dirs[-1] + 1 unless ! @dirs; #avoid error when games_dir is empty
+    return 1234;
+}
+
+sub create_game {
+    my $num_arguments = @_;
+    die "arguments \$rom_name, \$system, \$owned_by, \$password required (only given $num_arguments arguments)"  unless @_ == 5;
+    
+    my ($self, $rom_name, $system, $owned_by, $password)  = @_;
+    
+    my $game_id = free_id($self->games_dir());
     my $game_dir = $self->games_dir."/$game_id";
 
     unless (defined $rom_name) {
@@ -161,7 +175,7 @@ sub create_game {
 	puke_file "$game_dir/password", $password;
     }
 
-    return 1;
+    return $game_id;
 }
 
 sub lock_game {

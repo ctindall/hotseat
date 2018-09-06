@@ -2,13 +2,14 @@ package HotSeat;
 use Mojo::Base 'Mojolicious';
 
 use HotSeat::Model::Users;
+use HotSeat::Model::Game;
 
 # This method will run once at server start
 sub startup {
   my $self = shift;
 
   $self->helper( users => sub { state $users = HotSeat::Model::Users->new },
-		 games => sub { state $games = HotSeat::Model::Games->new });
+		 games => sub { state $games = HotSeat::Model::GameManager->new });
   
   # Load configuration from hash returned by "my_app.conf"
   my $config = $self->plugin('Config');
