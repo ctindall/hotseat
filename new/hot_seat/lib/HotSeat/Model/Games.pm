@@ -32,19 +32,32 @@ sub puke_file {
 # API
 my $games_dir = Cwd::abs_path(dirname($0))."/games";
 
-sub new { bless {}, shift }
+sub new {
+    my $class = shift;
+    my $self = bless {
+	games_dir => $games_dir,
+    }, $class;
 
-sub set_games_dir {
-    $games_dir = shift;
+    return $self;
+}
+
+sub games_dir {
+    my $self = shift;
+
+    if (@_) {
+	$self->{games_dir} = shift;
+    }
+
+    return $self->{games_dir};
 }
 
 sub get_game {
     my $self = shift;
     
     my $game_id = shift;
-    my $game_dir = "$games_dir/$game_id";
+    my $game_dir = $self->games_dir()."/$game_id";
     my $exists = (-d $game_dir);
-
+    
     my $locked = 0;
     my $locked_by;
     my $rom_name;
@@ -54,10 +67,10 @@ sub get_game {
     my $state_file = "";
 
     if (!$exists) {
-	return ( exists => undef );
+	return ( exists => 0 );
     }
     
-    $locked = (-e "$game_dir/lock");
+    $locked = (-e "$game_dir/lock") ? 1 : 0;
 
     if (-e "$game_dir/rom_name") {
 	$rom_name = slurp_file "$game_dir/rom_name";
@@ -84,7 +97,7 @@ sub get_game {
     }
 
     return (
-	exists => $exists,
+	exists => 1,
 	game_id => $game_id,
 	locked => $locked,
 	locked_by => $locked_by,
@@ -107,12 +120,10 @@ sub create_game {
     my $password = shift;
 
     #double check game doesn't already exist so we don't clobber it
-    my %game = get_game $game_id;
-    if ($game{'exists'}) {
-	return 0;
-    }
-    
-    my $game_dir = "$games_dir/$game_id";
+    my %game = $self->get_game($game_id);
+    return 0 if $game{'exists'};
+
+    my $game_dir = $self->games_dir."/$game_id";
 
     unless (defined $rom_name) {
 	$rom_name = "pokemon_blue.gb";
@@ -158,24 +169,24 @@ sub lock_game {
     
     my $game_id = shift;
     my $user = shift; 
-    my %game = get_game $game_id;
+    my %game = $self->get_game($game_id);
 
     puke_file $game{'lock_file'}, $user;
     
-    return get_game $game_id ;
+    return $self->get_game($game_id);
 }
 
 sub unlock_game {
     my $self = shift;
     
     my $game_id = shift;
-    my %game = get_game($game_id);
+    my %game = $self->get_game($game_id);
 
     if ($game{'locked'}) {	
 	unlink $game{'lock_file'};
     }
     
-    return get_game($game_id);
+    return $self->get_game($game_id);
 }
 
 
