@@ -8,19 +8,39 @@ BEGIN { unshift @INC, "$FindBin::Bin/../lib" }
 use Test::More;
 use HotSeat::Model::Game;
 
+sub not_ok {
+    my ($value, $desc) = @_;
+
+    ok(!$value, $desc);
+}
+
 my ($rom, $system, $owner, $pass) = ("final_fantasy.nes.rom", "nes", "tobin", "goodpass2");
 my $game = HotSeat::Model::Game->create($rom, $system, $owner, $pass);
+$game = HotSeat::Model::Game->create($rom, $system, $owner, $pass);
+$game = HotSeat::Model::Game->create($rom, $system, $owner, $pass);
+$game = HotSeat::Model::Game->create($rom, $system, $owner, $pass);
 isa_ok($game, "HotSeat::Model::Game");
 
+ok(my $game_id = $game->game_id);
 ok(!$game->locked, 'newly created game is not locked');
 is($game->locked_by, undef, 'newly created game is not locked by anyone');
-is($game->rom, $rom);
-is($game->system, $system);
-is($game->owner, $owner);
-is($game->password, $pass);
+is($game->rom, $rom, 'can set $game->rom at creation');
+is($game->system, $system, 'can set $game->system at creation');
+is($game->owner, $owner,'can set $game->owner at creation');
+is($game->password, $pass, 'can set $game->pass at creation');
+like($game->state_file, qr/\/save.sna$/, '$game->state_file has the right kind of filename');
+
+ok($game->password_ok($pass), '$game->password_ok recognizes good password');
+not_ok($game->password_ok('gibberish'), '$game->password_ok recognizes bad password');
 
 ok($game->lock('bill'), 'can lock a game without errors');
 ok($game->locked, 'game is actually locked after locking');
 is($game->locked_by, 'bill', 'game is locked by the right user after locking');
+
+isnt(HotSeat::Model::Game->find_by_id($game_id), undef, 'find_by_id works for proper game_ids');
+is(HotSeat::Model::Game->find_by_id(293090102030302029292929292929292929222222), undef, 'find_by_id works for nonexistent game_ids');
+
+is($game->delete, 1);
+is(HotSeat::Model::Game->find_by_id($game_id), undef);
 
 done_testing();

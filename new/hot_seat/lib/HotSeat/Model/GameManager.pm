@@ -1,12 +1,12 @@
 package HotSeat::Model::GameManager;
-our @EXPORT = qw( new set_games_dir create_game get_game lock_game unlock_game );
+our @EXPORT = qw( new set_games_dir create_game get_game lock_game unlock_game delete_game );
 
 use strict;
 use warnings;
 use v5.18;
 
 use File::Basename;
-use File::Path qw( make_path );
+use File::Path qw( make_path rmtree );
 use Cwd;
 
 # UTIL (not exported)
@@ -54,9 +54,9 @@ sub games_dir {
 }
 
 sub get_game {
-    my $self = shift;
+    my ($self, $game_id) = @_;
+    die '$game_id required to get_game' unless defined $game_id;
     
-    my $game_id = shift;
     my $game_dir = $self->games_dir()."/$game_id";
     my $exists = (-d $game_dir);
     
@@ -68,8 +68,16 @@ sub get_game {
     my $owned_by;
     my $state_file = "";
 
-    if (!$exists) {
+    if (!$exists && wantarray) {
 	return ( exists => 0 );
+    }
+
+    if (!$exists && !wantarray) {
+	return undef;
+    }
+
+    if ($exists && !wantarray) {
+	return 1;
     }
     
     $locked = (-e "$game_dir/lock") ? 1 : 0;
@@ -92,10 +100,6 @@ sub get_game {
     
     if ($exists && $locked) {
 	$locked_by = slurp_file "$game_dir/lock";
-    }
-    
-    unless (wantarray) {
-	return $locked; #just return a bool in scalar context
     }
 
     return (
@@ -203,5 +207,18 @@ sub unlock_game {
     return $self->get_game($game_id);
 }
 
+sub delete_game {
+    my ($self, $id) = @_;
+
+    die '$game_id required for delete_game' unless defined $id ;
+
+    my $dir = $self->games_dir."/$id";
+    if (-d $dir) {
+	rmtree $dir;
+	return 1;
+    }
+
+    return undef;
+}
 
 1;
