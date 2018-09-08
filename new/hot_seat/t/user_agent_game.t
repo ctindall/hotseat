@@ -3,7 +3,15 @@ use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
 
-my $t = Test::Mojo->new('HotSeat');
+use File::Path;
+
+chomp(my $tmpdir = `mktemp -d`);
+
+my $t = Test::Mojo->new('HotSeat', {
+    games_dir => $tmpdir,
+});
+
+is($t->app->config('games_dir'), $tmpdir);
 
 #this should fail since there are no arguments
 $t->post_ok('/game')
@@ -21,15 +29,25 @@ $t->post_ok('/game'  => form => { password => "goodpass",
     ->json_has('/rom_name')
     ->json_has('/system');
 
+my $game_id = $t->tx->res->json('/game_id');
+
 #this one shouldn't exist unless this is way more popular than I would predict
 $t->post_ok('/game/9999999999999999999999999999')
     ->status_is(404);
 
-#this one should exist because its the lowest possible game_id and we've created one
-$t->post_ok('/game/1234')
+#this one should exist because we just created it
+$t->post_ok("/game/$game_id")
     ->status_is(409);
 
-$t->get_ok('/game/1234')
+$t->get_ok("/game/$game_id")
     ->status_is(403);
 
+$t->get_ok("/game/$game_id" => form => { password => "goodpass" })
+    ->status_is(200)
+    ->json_is('/game_id', $game_id);
+
+$t->get_ok("/game/9999999999999999999999999999")
+    ->status_is(404);
+
+rmtree($tmpdir) unless $tmpdir eq '/var/hotseat/games'; #don't delete production data if I'm using it for a test
 done_testing();

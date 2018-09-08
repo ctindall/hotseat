@@ -7,19 +7,22 @@ BEGIN { unshift @INC, "$FindBin::Bin/../lib" }
 
 use Test::More;
 use HotSeat::Model::Game;
+use File::Path qw(rmtree);
 
 sub not_ok {
     my ($value, $desc) = @_;
-
     ok(!$value, $desc);
 }
 
+chomp(my $tmpdir = `mktemp -d`);
+
 my ($rom, $system, $owner, $pass) = ("final_fantasy.nes.rom", "nes", "tobin", "goodpass2");
-my $game = HotSeat::Model::Game->create($rom, $system, $owner, $pass);
-$game = HotSeat::Model::Game->create($rom, $system, $owner, $pass);
-$game = HotSeat::Model::Game->create($rom, $system, $owner, $pass);
-$game = HotSeat::Model::Game->create($rom, $system, $owner, $pass);
+my $game = HotSeat::Model::Game->create($tmpdir, $rom, $system, $owner, $pass);
+$game = HotSeat::Model::Game->create($tmpdir, $rom, $system, $owner, $pass);
+$game = HotSeat::Model::Game->create($tmpdir, $rom, $system, $owner, $pass);
+$game = HotSeat::Model::Game->create($tmpdir, $rom, $system, $owner, $pass);
 isa_ok($game, "HotSeat::Model::Game");
+is($game->{'games_dir'}, $tmpdir);
 
 ok(my $game_id = $game->game_id);
 ok(!$game->locked, 'newly created game is not locked');
@@ -37,10 +40,11 @@ ok($game->lock('bill'), 'can lock a game without errors');
 ok($game->locked, 'game is actually locked after locking');
 is($game->locked_by, 'bill', 'game is locked by the right user after locking');
 
-isnt(HotSeat::Model::Game->find_by_id($game_id), undef, 'find_by_id works for proper game_ids');
-is(HotSeat::Model::Game->find_by_id(293090102030302029292929292929292929222222), undef, 'find_by_id works for nonexistent game_ids');
+isnt(HotSeat::Model::Game->find_by_id($tmpdir, $game_id), undef, 'find_by_id works for proper game_ids');
+is(HotSeat::Model::Game->find_by_id($tmpdir, 29309002030), undef, 'find_by_id works for nonexistent game_ids');
 
 is($game->delete, 1);
-is(HotSeat::Model::Game->find_by_id($game_id), undef);
+is(HotSeat::Model::Game->find_by_id($tmpdir, $game_id), undef);
 
+rmtree($tmpdir);
 done_testing();

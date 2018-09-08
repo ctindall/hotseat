@@ -31,10 +31,9 @@ sub puke_file {
 }
 
 # API
-my $games_dir = Cwd::abs_path(dirname($0))."/games";
-
 sub new {
     my $class = shift;
+    my $games_dir = shift || "/var/hotseat/games";
     my $self = bless {
 	games_dir => $games_dir,
     }, $class;
@@ -54,11 +53,11 @@ sub games_dir {
 }
 
 sub get_game {
-    my ($self, $game_id) = @_;
+    my ($self, $dir, $game_id) = @_;
     die '$game_id required to get_game' unless defined $game_id;
-    
-    my $game_dir = $self->games_dir()."/$game_id";
-    my $exists = (-d $game_dir);
+    die '$dir required to get_game' unless defined $dir;
+    my $game_dir = "$dir/$game_id";
+    die "No such game directory $game_dir" unless (-d $game_dir);
     
     my $locked = 0;
     my $locked_by;
@@ -67,6 +66,7 @@ sub get_game {
     my $password;
     my $owned_by;
     my $state_file = "";
+    my $exists = (-d $game_dir);
 
     if (!$exists && wantarray) {
 	return ( exists => 0 );
@@ -138,16 +138,16 @@ sub free_id {
 
 sub create_game {
     my $num_arguments = @_;
-    die "arguments \$rom_name, \$system, \$owned_by, \$password required (only given $num_arguments arguments)"  unless @_ == 5;
+    die "arguments \$dir, \$rom_name, \$system, \$owned_by, \$password required (only given $num_arguments arguments)"  unless @_ == 6;
 
     foreach(@_) {
 	die "undefined argument in create_game" unless defined $_;
     }
     
-    my ($self, $rom_name, $system, $owned_by, $password)  = @_;
+    my ($self, $dir, $rom_name, $system, $owned_by, $password)  = @_;
     
-    my $game_id = free_id($self->games_dir());
-    my $game_dir = $self->games_dir."/$game_id";
+    my $game_id = free_id($dir);
+    my $game_dir = "$dir/$game_id";
 
     unless (defined $rom_name) {
 	$rom_name = "pokemon_blue.gb";
@@ -189,36 +189,38 @@ sub create_game {
 }
 
 sub lock_game {
-    my $self = shift;
+    my $numargs = @_;
+    die "Not enough arguments in lock_game (given only $numargs)" unless @ == 4;
     
-    my $game_id = shift;
-    my $user = shift; 
-    my %game = $self->get_game($game_id);
+    my ($self, $dir, $id, $user) = @_;
+    my %game = $self->get_game($dir, $id);
 
     puke_file $game{'lock_file'}, $user;
     
-    return $self->get_game($game_id);
+    return $self->get_game($dir, $id);
 }
 
 sub unlock_game {
-    my $self = shift;
+    my $numargs = @_;
+    die "Not enough arguments in lock_game (given only $numargs)" unless @ == 4;
     
-    my $game_id = shift;
-    my %game = $self->get_game($game_id);
+    my ($self, $dir, $id, $user) = @_;
+    my %game = $self->get_game($dir, $id);
 
     if ($game{'locked'}) {	
 	unlink $game{'lock_file'};
     }
     
-    return $self->get_game($game_id);
+    return $self->get_game($dir, $id);
 }
 
 sub delete_game {
-    my ($self, $id) = @_;
+    my ($self, $dir, $id) = @_;
 
     die '$game_id required for delete_game' unless defined $id ;
+    die '$game_dir required for delete_game' unless defined $dir ;
 
-    my $dir = $self->games_dir."/$id";
+    $dir = "$dir/$id";
     if (-d $dir) {
 	rmtree $dir;
 	return 1;
