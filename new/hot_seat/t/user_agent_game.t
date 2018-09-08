@@ -31,6 +31,7 @@ $t->post_ok('/game'  => form => { password => "goodpass",
 
 my $game_id = $t->tx->res->json('/game_id');
 
+#POST
 #this one shouldn't exist unless this is way more popular than I would predict
 $t->post_ok('/game/9999999999999999999999999999')
     ->status_is(404);
@@ -39,6 +40,7 @@ $t->post_ok('/game/9999999999999999999999999999')
 $t->post_ok("/game/$game_id")
     ->status_is(409);
 
+#GET
 $t->get_ok("/game/$game_id")
     ->status_is(403);
 
@@ -49,5 +51,10 @@ $t->get_ok("/game/$game_id" => form => { password => "goodpass" })
 $t->get_ok("/game/9999999999999999999999999999")
     ->status_is(404);
 
+#PATCH
+$t->patch_ok("/game/$game_id"  => form =>  { new_password => "newpass", password => "goodpass" })
+    ->status_is(200);
+
+#clean up
 rmtree($tmpdir) unless $tmpdir eq '/var/hotseat/games'; #don't delete production data if I'm using it for a test
 done_testing();

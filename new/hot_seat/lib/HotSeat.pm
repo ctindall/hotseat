@@ -13,16 +13,20 @@ sub startup {
   # Router
   my $r = $self->routes;
   $r->post('/game')
-      ->to('game#create', games_dir => $config->{games_dir})
+      ->to('game#create')
       ->name('create_game');
 
   $r->post('/game/:game_id')
-      ->to('game#create_existing', games_dir => $config->{games_dir})
+      ->to('game#create_existing')
       ->name('create_game_existing');
 
   $r->get('/game/:game_id')
-      ->to('game#read', games_dir => $config->{games_dir})
+      ->to('game#read')
       ->name('read_game');
+
+  $r->patch('/game/:game_id')
+      ->to('game#update')
+      ->name('update_game');
       
 }
 

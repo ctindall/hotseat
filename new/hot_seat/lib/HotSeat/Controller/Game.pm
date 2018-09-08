@@ -73,4 +73,48 @@ sub read {
     });
 }
 
+sub update {
+    my ($self) = @_;
+    my $game;
+    
+    die "\$config('games_dir') must be set" unless defined $self->app->config('games_dir');
+
+    $game = HotSeat::Model::Game->find_by_id($self->app->config('games_dir'), $self->stash('game_id'));
+
+    return $self->render(json => {
+    	errors => ( { detail => "No such game." } ),
+     }, status => 404) unless defined $game;
+
+    return $self->render(json => {
+    	errors => ( { detail => "Invalid game password." } ),
+    }, status => 403) unless $game->password_ok($self->param('password'));
+    
+    #do the updating
+    if (defined $self->param('new_password')) {
+	$game->password($self->param('new_password'));
+    }
+
+    if (defined $self->param('owned_by')) {
+	$game->owned_by($self->param('owned_by'));
+    }
+
+    if (defined $self->param('rom_name')) {
+	$game->rom_name($self->param('rom_name'));
+    }
+
+    if (defined $self->param('system')) {
+	$game->system($self->param('system'));
+    }
+    
+    #return the new object
+    return $self->render(json => {
+	game_id   => $game->game_id,
+	locked    => $game->locked ? \1 : \0,
+	locked_by => $game->locked_by,
+	rom_name  => $game->rom,
+	system    => $game->system,	
+    });
+	
+}
+
 1;
