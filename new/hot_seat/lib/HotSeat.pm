@@ -19,6 +19,11 @@ sub startup {
   $r->post('/game/:game_id')
       ->to('game#create_existing')
       ->name('create_game_existing');
+
+  $r->get('/game/:game_id')
+      ->to('game#read')
+      ->name('read_game');
+      
 }
 
 1;

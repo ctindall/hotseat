@@ -29,5 +29,7 @@ $t->post_ok('/game/9999999999999999999999999999')
 $t->post_ok('/game/1234')
     ->status_is(409);
 
+$t->get_ok('/game/1234')
+    ->status_is(403);
 
 done_testing();

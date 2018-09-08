@@ -1,6 +1,5 @@
 package HotSeat::Controller::Game;
 use Mojo::Base 'Mojolicious::Controller';
-
 use HotSeat::Model::Game;
 
 # sub create {
@@ -53,6 +52,31 @@ sub create_existing {
     return $self->render( json => {
 	errors => ( { detail => "No such game." } )
     }, status => 404);
+}
+
+sub read {
+    my ($self) = @_;
+    my $game;
+
+    eval {
+	$game = HotSeat::Model::Game->find_by_id($self->stash('game_id'));
+    };
+
+    return $self->render(json => {
+	errors => ( { detail => "No such game." } ),
+    }, status => 404) if $@;
+
+    return $self->render(json => {
+	errors => ( { detail => "Invalid game password." } ),
+    }, status => 403) unless $game->password_ok($self->param('password'));
+    
+    return $self->render(json => {
+	game_id   => $game->game_id,
+	locked    => $game->locked ? \1 : \0,
+	locked_by => $game->locked_by,
+	rom_name  => $game->rom,
+	system    => $game->system,	
+    });
 }
 
 1;
