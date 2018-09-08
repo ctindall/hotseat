@@ -120,8 +120,10 @@ sub free_id {
     my $dir = shift;
     my $dh;
 
-    die "$dir doesn't exist" if ! -e $dir;
-    die "$dir isn't a directory" if ! -d $dir;
+    if (! -d $dir && ! -e $dir) {
+	`mkdir $dir`;
+    }
+
     
     opendir($dh, $dir) or die "can't open $dir";
     
@@ -137,6 +139,10 @@ sub free_id {
 sub create_game {
     my $num_arguments = @_;
     die "arguments \$rom_name, \$system, \$owned_by, \$password required (only given $num_arguments arguments)"  unless @_ == 5;
+
+    foreach(@_) {
+	die "undefined argument in create_game" unless defined $_;
+    }
     
     my ($self, $rom_name, $system, $owned_by, $password)  = @_;
     
