@@ -1,2 +1,2 @@
 test:
-	raco test lib/*
+	raco test lib/*.rkt
