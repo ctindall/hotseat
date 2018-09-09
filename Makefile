@@ -1,4 +1,8 @@
-test: servertest
+test: servertest clienttest
 
 servertest:
-	prove -Iserver/lib server/t
+	cd server && make test
+
+clienttest:
+	cd client && make test
+
