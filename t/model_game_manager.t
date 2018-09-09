@@ -39,4 +39,8 @@ is($game{'locked_by'}, 'bill', 'properly store who locked the game');
 is($game{'locked'}, 0, 'game unlocking works');
 is($game{'locked_by'}, undef, 'locked_by undef after unlocking');    
 
+#update some stuff
+ok(%game = $g->update_game_field($tmpdir, $game_id, 'owned_by', "chuck"));
+is($game{'owned_by'}, "chuck");
+
 done_testing();

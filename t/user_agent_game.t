@@ -52,8 +52,34 @@ $t->get_ok("/game/9999999999999999999999999999")
     ->status_is(404);
 
 #PATCH
-$t->patch_ok("/game/$game_id"  => form =>  { new_password => "newpass", password => "goodpass" })
+my $form =  { password => "goodpass",
+	      new_password => "newpass", 
+	      owned_by => "revolver_ocelot",
+	      rom_name => "animaniacs.rom",
+	      system => "genesis" };
+
+$t->patch_ok("/game/$game_id"  => form => $form)
+    ->status_is(200)
+    ->json_is('/owned_by', $form->{'owned_by'})
+    ->json_is('/rom_name', $form->{'rom_name'})
+    ->json_is('/system', $form->{'system'});
+
+$t->get_ok("/game/$game_id" => form => { password => $form->{'new_password'} })
     ->status_is(200);
+
+$t->get_ok("/game/$game_id" => form => { password => "goodpass" })
+    ->status_is(403);
+
+#DELETE
+$t->delete_ok("/game/$game_id" => form => { password => $form->{'new_password'}})
+    ->status_is(204);
+
+$t->get_ok("/game/$game_id" => form => { password => $form->{'new_password'}})
+    ->status_is(404);
+
+$t->delete_ok("/game/$game_id" => form => { password => $form->{'new_password'}})
+    ->status_is(404);
+    
 
 #clean up
 rmtree($tmpdir) unless $tmpdir eq '/var/hotseat/games'; #don't delete production data if I'm using it for a test

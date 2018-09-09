@@ -19,8 +19,7 @@ sub slurp_file {
 }
 
 sub puke_file {
-    my $filename = shift;
-    my $value = shift;
+    my ($filename, $value) = @_;
 
     if ($value) {
 	unlink $filename;
@@ -229,4 +228,19 @@ sub delete_game {
     return undef;
 }
 
+sub update_game_field {
+    my ($self, $dir, $id, $field, $value) = @_;
+
+    die "Incorrect number of arguments" unless @_ == 5;
+    
+    foreach (($self, $dir, $id, $field)) {
+	die "undefined argument" unless defined $_;
+    }
+
+    puke_file("$dir/$id/$field", $value);
+    
+    return $self->get_game($dir, $id);
+}
+
 1;
+

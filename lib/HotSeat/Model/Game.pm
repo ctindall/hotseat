@@ -73,35 +73,55 @@ sub password_ok {
 
 # ACCESSORS
 sub locked_by {
-    my ($self) = @_;
+    my ($self) = @_;    
     my %game = $gm->get_game($self->{'games_dir'}, $self->game_id);
 
     return $game{'locked_by'};
 }
 
 sub rom {
-    my ($self) = @_;
+    my ($self, $new) = @_;
+
+    if (defined $new) {
+	$gm->update_game_field($self->{'games_dir'}, $self->game_id, "rom_name", $new);
+    }
+
     my %game = $gm->get_game($self->{'games_dir'}, $self->game_id);
 
     return $game{'rom_name'};
 }
 
 sub system {
-    my ($self) = @_;
+    my ($self, $new) = @_;
+
+    if (defined $new) {
+	$gm->update_game_field($self->{'games_dir'}, $self->game_id, "system", $new);
+    }
+    
     my %game = $gm->get_game($self->{'games_dir'}, $self->game_id);
 
     return $game{'system'};
 }
 
 sub owner {
-    my ($self) = @_;
+    my ($self, $new) = @_;
+
+    if (defined $new) {
+	$gm->update_game_field($self->{'games_dir'}, $self->game_id, "owned_by", $new);
+    }
+    
     my %game = $gm->get_game($self->{'games_dir'}, $self->game_id);
 
     return $game{'owned_by'};
 }
 
 sub password {
-    my ($self) = @_;
+    my ($self, $new) = @_;
+
+    if (defined $new) {
+	$gm->update_game_field($self->{'games_dir'}, $self->game_id, "password", $new);
+    }
+    
     my %game = $gm->get_game($self->{'games_dir'}, $self->game_id);
 
     return $game{'password'};

@@ -27,6 +27,10 @@ sub startup {
   $r->patch('/game/:game_id')
       ->to('game#update')
       ->name('update_game');
+
+  $r->delete('/game/:game_id')
+      ->to('game#delete')
+      ->name('delete_game');
       
 }
 
