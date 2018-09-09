@@ -11,8 +11,9 @@ sub create {
     my $game;
 
     # try to create the game
-    eval {
-	$game = HotSeat::Model::Game->create($self->app->config('games_dir'), $rom_name, $system, $owned_by, $password);
+    eval { 
+	$game = HotSeat::Model::Game->create($self->app->config('games_dir'), 
+					     $rom_name, $system, $owned_by, $password);
     };
     
     if ($@) { #something went wrong with creating the game
@@ -25,11 +26,12 @@ sub create {
     $self->res->headers->header('Location:' => '/game/'.$game->game_id);
     
     return $self->render(json => {
-	game_id   => $game->game_id,
-	locked    => $game->locked ? \1 : \0,
-	locked_by => $game->locked_by,
-	rom_name  => $game->rom,
-	system    => $game->system,
+	game_id    => $game->game_id,
+	locked     => $game->locked ? \1 : \0,
+	locked_by  => $game->locked_by,
+	rom_name   => $game->rom,
+	system     => $game->system,
+	save_state => $game->save_state,
     }, status => 201);
 }
 
@@ -106,14 +108,19 @@ sub update {
 	$game->system($self->param('system'));
     }
     
+    if (defined $self->param('save_state')) {
+	$game->save_state($self->param('save_state'));
+    }
+
     #return the new object
     return $self->render(json => {
-	game_id   => $game->game_id,
-	locked    => $game->locked ? \1 : \0,
-	locked_by => $game->locked_by,
-	rom_name  => $game->rom,
-	system    => $game->system,
-	owned_by  => $game->owner,
+	game_id    => $game->game_id,
+	locked     => $game->locked ? \1 : \0,
+	locked_by  => $game->locked_by,
+	rom_name   => $game->rom,
+	system     => $game->system,
+	owned_by   => $game->owner,
+	save_state => $game->save_state,
     });
 	
 }

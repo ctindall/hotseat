@@ -5,6 +5,7 @@ use Test::Mojo;
 
 use File::Path;
 
+use Mojo::Util qw(b64_encode b64_decode);
 chomp(my $tmpdir = `mktemp -d`);
 
 my $t = Test::Mojo->new('HotSeat', {
@@ -27,7 +28,9 @@ $t->post_ok('/game'  => form => { password => "goodpass",
     ->json_has('/locked')
     ->json_has('/locked_by')
     ->json_has('/rom_name')
-    ->json_has('/system');
+    ->json_has('/system')
+    ->json_has('/save_state')
+    ->json_is('/save_state', undef);
 
 my $game_id = $t->tx->res->json('/game_id');
 
@@ -69,6 +72,19 @@ $t->get_ok("/game/$game_id" => form => { password => $form->{'new_password'} })
 
 $t->get_ok("/game/$game_id" => form => { password => "goodpass" })
     ->status_is(403);
+
+#PATCH for save_state
+my $randstring = "";
+foreach my $i (0..(1024)) {
+    $randstring .= chr(int(rand(255)));
+}
+my $b64_string = b64_encode($randstring, '');
+
+$t->patch_ok("/game/$game_id" => form => { password => $form->{'new_password'},
+					   save_state => $b64_string})
+    ->status_is(200)
+    ->json_is('/save_state', $b64_string);
+
 
 #DELETE
 $t->delete_ok("/game/$game_id" => form => { password => $form->{'new_password'}})

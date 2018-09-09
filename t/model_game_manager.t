@@ -8,6 +8,8 @@ BEGIN { unshift @INC, "$FindBin::Bin/../lib" }
 use Test::More;
 use HotSeat::Model::GameManager;
 
+use Mojo::Util qw(b64_encode b64_decode);
+
 chomp(my $tmpdir = `mktemp -d`);
 my $g = HotSeat::Model::GameManager->new($tmpdir);
 isa_ok($g, "HotSeat::Model::GameManager");
@@ -40,7 +42,24 @@ is($game{'locked'}, 0, 'game unlocking works');
 is($game{'locked_by'}, undef, 'locked_by undef after unlocking');    
 
 #update some stuff
-ok(%game = $g->update_game_field($tmpdir, $game_id, 'owned_by', "chuck"));
-is($game{'owned_by'}, "chuck");
+my %updates = (
+    owned_by => 'chuck',
+    rom_name => 'burgertime.a2600.rom',
+    system => 'atari2600',
+    password => 'nicepass',
+    );
+
+foreach my $key (keys %updates) {
+    ok(%game = $g->update_game_field($tmpdir, $game_id, $key, $updates{$key}), "can update '$key' without errors");
+    is($game{$key}, $updates{$key},"'$key' is correct after setting");
+}
+
+my $randstring = "";
+foreach my $i (0..(1024)) {
+    $randstring .= chr(int(rand(255)));
+}
+my $b64_string = b64_encode($randstring, '');
+ok(%game = $g->update_game_field($tmpdir, $game_id, "save_state", $b64_string), 'can update save_state without errors');
+is(b64_decode($game{'save_state'}), $randstring, 'save_state b64 round trip works'); 
 
 done_testing();

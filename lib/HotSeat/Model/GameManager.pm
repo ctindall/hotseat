@@ -22,7 +22,7 @@ sub puke_file {
     my ($filename, $value) = @_;
 
     if ($value) {
-	unlink $filename;
+	unlink $filename if (-e $filename);
 	open(my $fh, '>', $filename);
 	print $fh $value;
 	close $fh;
@@ -64,7 +64,7 @@ sub get_game {
     my $system;
     my $password;
     my $owned_by;
-    my $state_file = "";
+    my $save_state;
     my $exists = (-d $game_dir);
 
     if (!$exists && wantarray) {
@@ -96,6 +96,11 @@ sub get_game {
     if (-e "$game_dir/owned_by") {
 	$owned_by = slurp_file "$game_dir/owned_by";
     }        
+
+    if (-e "$game_dir/save_state") {
+       $save_state = slurp_file "$game_dir/save_state";
+    }        
+
     
     if ($exists && $locked) {
 	$locked_by = slurp_file "$game_dir/lock";
@@ -107,11 +112,11 @@ sub get_game {
 	locked => $locked,
 	locked_by => $locked_by,
 	lock_file => "$game_dir/lock",
-	state_file => "$game_dir/save.sna",
 	rom_name => $rom_name,
 	system => $system,
 	owned_by => $owned_by,
 	password => $password,
+	save_state => $save_state,
     );
 }
 
@@ -236,7 +241,7 @@ sub update_game_field {
     foreach (($self, $dir, $id, $field)) {
 	die "undefined argument" unless defined $_;
     }
-
+    
     puke_file("$dir/$id/$field", $value);
     
     return $self->get_game($dir, $id);

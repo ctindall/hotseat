@@ -139,11 +139,16 @@ sub locked {
     return $game{'locked'};
 }
 
-sub state_file {
-    my ($self) = @_;
+sub save_state {
+    my ($self, $new) = @_;
+
+    if (defined $new) {
+	$gm->update_game_field($self->{'games_dir'}, $self->game_id, "save_state", $new);
+    }
+    
     my %game = $gm->get_game($self->{'games_dir'}, $self->game_id);
 
-    return $game{'state_file'};
+    return $game{'save_state'};
 }
 
 1;
