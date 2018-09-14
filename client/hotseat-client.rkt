@@ -1,5 +1,5 @@
 #lang racket
 
-(require "./lib/network.rkt")
+(require "lib/network.rkt")
 
-(print "hi")
+(read-game 1234)
