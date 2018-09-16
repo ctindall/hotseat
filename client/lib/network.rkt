@@ -59,6 +59,10 @@
 									     #:rom-name     rom-name
 									     #:system       system
 									     #:save-state   save-state)))
+
+(define (delete-game id)
+  (game-server-request "DELETE" (format "/game/~a" id) '((password . ,game-server-password))))
+
 (module+ test
 	 (require rackunit)
 	 
@@ -102,7 +106,10 @@
 					     #:owned-by "goodowner"
 					     #:system "genesis"
 					     #:save-state  "123499292929")))
-	   (let ([game (read-game id)])
+	   (let ([game (read-game id)]
+		 [oldpass game-server-password]
+		 [newpass "justabetterpass"])
+	     
 	     (test-equal? "update successfully changes rom_name"
 			  (hash-ref game 'rom_name) "excitebike.nes.rom")
 		 
@@ -113,7 +120,17 @@
 			  (hash-ref game 'system) "genesis")
 
 	     (test-equal? "update successfully changes save_state"
-			  (hash-ref game 'save_state) "123499292929")))
+			  (hash-ref game 'save_state) "123499292929")
+
+	     (update-game id #:new-password newpass)
+	     (set-game-server-password! newpass)
+	     
+	     (test-not-exn "can read-game after setting password"
+			   (thunk (read-game 1234)))
+
+	     (update-game id #:new-password oldpass)
+	     (set-game-server-password! oldpass)))
+
 	 
 	 (set-tests)
 	 (create-tests)
