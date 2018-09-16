@@ -1,2 +1,2 @@
 test:
-	raco test lib/*.rkt
+	./test.sh
