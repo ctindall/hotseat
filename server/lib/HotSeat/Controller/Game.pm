@@ -71,7 +71,9 @@ sub read {
 	locked    => $game->locked ? \1 : \0,
 	locked_by => $game->locked_by,
 	rom_name  => $game->rom,
-	system    => $game->system,	
+	system    => $game->system,
+	owned_by   => $game->owner,
+	save_state => $game->save_state,
     });
 }
 
