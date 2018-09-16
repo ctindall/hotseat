@@ -66,10 +66,12 @@
 									     #:save-state   save-state)))
 
 (define (delete-game id)
-  (game-server-request "DELETE" (format "/game/~a" id) '((password . ,game-server-password))))
+  (game-server-request "DELETE" (format "/game/~a" id) `((password . ,game-server-password))))
 
 (module+ test
 	 (require rackunit)
+
+	 (define game-id 1234)
 	 
 	 (define (set-tests)
 	   (let ([old-pass game-server-password]
@@ -89,29 +91,28 @@
 
 	 (define (create-tests)
 	   (test-not-exn "creating game doesn't raise exception"
-			 (thunk (create-game "pokemon_burnt_umber.gb"
-					     "intellivision"
-					     "tony"
-					     "bestpass"))))
+			 (thunk
+			  (set! game-id (dict-ref (create-game "pokemon_burnt_umber.gb"
+							       "intellivision"
+							       "tony"
+							       "bestpass") 'game_id))
+			  (set-game-server-password! "bestpass"))))
 	 
 	 (define (read-tests)
-	   (define id 1234)
-
 	   (test-not-exn "read-game doesn't raise exception"
-	   		 (thunk (read-game id)))
+	   		 (thunk (read-game game-id)))
 	   
 	   (test-pred "read-game returns a hash"
-		      hash? (read-game id)))
+		      hash? (read-game game-id)))
 
 	 (define (update-tests)
-	   (define id 1234)
 	   (test-not-exn "update game doesn't raise exception"
-			 (thunk (update-game id
+			 (thunk (update-game game-id
 					     #:rom-name "excitebike.nes.rom"
 					     #:owned-by "goodowner"
 					     #:system "genesis"
 					     #:save-state  "123499292929")))
-	   (let ([game (read-game id)]
+	   (let ([game (read-game game-id)]
 		 [oldpass game-server-password]
 		 [newpass "justabetterpass"])
 	     
@@ -127,17 +128,26 @@
 	     (test-equal? "update successfully changes save_state"
 			  (hash-ref game 'save_state) "123499292929")
 
-	     (update-game id #:new-password newpass)
+	     (update-game game-id #:new-password newpass)
 	     (set-game-server-password! newpass)
 	     
 	     (test-not-exn "can read-game after setting password"
-			   (thunk (read-game 1234)))
+			   (thunk (read-game game-id)))
 
-	     (update-game id #:new-password oldpass)
+	     (update-game game-id #:new-password oldpass)
 	     (set-game-server-password! oldpass)))
+
+	 (define (delete-tests)
+	   (test-not-exn "no exception deleting game"
+			 (thunk (delete-game game-id)))
+
+	   (test-equal? "no such game after delete"
+	   		(dict-ref (dict-ref (read-game game-id) 'errors) 'detail)
+	   		"No such game."))
 
 	 
 	 (set-tests)
 	 (create-tests)
 	 (read-tests)
-	 (update-tests))
+	 (update-tests)
+	 (delete-tests))
