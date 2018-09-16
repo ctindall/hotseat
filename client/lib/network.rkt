@@ -33,6 +33,21 @@
 (define (read-game id)
   (game-server-request "GET" (format "/game/~a" id) `((password . ,game-server-password))))
 
+(define (update-game id
+		     #:new-password [new-password #f]
+		     #:owned-by     [owned-by #f]
+		     #:rom-name     [rom-name #f]
+		     #:system       [system #f]
+		     #:save-state   [save-state #f])
+  (let ([dict '()])
+    (cond
+     [new-password (set! dict (dict-set dict 'new_password new-password))]
+     [owned-by     (set! dict (dict-set dict 'owned_by     owned-by))]
+     [rom-name     (set! dict (dict-set dict 'rom_name     rom-name))]
+     [system       (set! dict (dict-set dict 'system       system))]
+     [save-state   (set! dict (dict-set dict 'save_state   save-state))])
+     (game-server-request "PATCH" (format "/game/~a" id) dict)))
+
 (module+ test
 	 (require rackunit)
 	 
@@ -41,29 +56,38 @@
 		 [old-url game-server-url])
 	     
 	     (test-not-exn "setting password doesn't raise exception"
-			   (lambda () (set-game-server-password! "badpass")))
+			   (thunk
+			    (set-game-server-password! "badpass")))
 
 	     (test-not-exn "setting url doesn't raise exception"
-			   (lambda () (set-game-server-url! "https://google.org/hotseat.gif")))
+			   (thunk
+			    (set-game-server-url! "https://google.org/hotseat.gif")))
 
 	     ;;set them back to where we found them
 	     (set-game-server-password! old-pass)
 	     (set-game-server-url! old-url)))
 
-	 (set-tests)
-
 	 (define (create-tests)
 	   (test-not-exn "creating game doesn't raise exception"
-			 (lambda () (create-game "pokemon_burnt_umber.gb" "intellivision" "tony" "bestpass"))))
-	 (create-tests)
+			 (thunk (create-game "pokemon_burnt_umber.gb"
+					     "intellivision"
+					     "tony"
+					     "bestpass"))))
 	 
 	 (define (read-tests)
 	   (define id 1234)
 
 	   (test-not-exn "read-game doesn't raise exception"
-	   		 (lambda () (read-game id)))
+	   		 (thunk (read-game id)))
 	   
 	   (test-pred "read-game returns a hash"
 		      hash? (read-game id)))
 
-	 (read-tests))
+	 (define (update-tests)
+	   (test-not-exn "update game doesn't raise exception"
+			 (thunk (update-game 1234 #:rom-name "excitebike.nes.rom"))))
+	 
+	 (set-tests)
+	 (create-tests)
+	 (read-tests)
+	 (update-tests))
