@@ -9,10 +9,12 @@
 	 net/uri-codec
 	 json)
 
-(provide create-game
+(provide set-game-server-password!
+	 set-game-server-url!
+	 create-game
 	 read-game
-	 set-game-server-password!
-	 set-game-server-url!)
+	 update-game
+	 delete-game)
 
 (define game-server-password "goodpass")
 (define (set-game-server-password! pass)
