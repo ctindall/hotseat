@@ -13,6 +13,7 @@ pid=$(ps fauxww | grep hot_seat\ daemon | grep -v grep | awk '{print $2}')
 
 #run the client tests
 raco test lib/*.rkt
+success=$?
 
-#clean up testing server
 kill $pid
+exit $success
