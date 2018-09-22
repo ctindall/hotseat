@@ -124,6 +124,10 @@ sub update {
 	$game->lock($self->param('locked_by'));
     }
 
+    if (defined $self->param('locked') && $self->param('locked') == \0) {
+	$game->unlock();
+    }
+    
     #return the new object
     return $self->render(json => {
 	game_id    => $game->game_id,

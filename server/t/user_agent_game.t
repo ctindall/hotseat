@@ -72,6 +72,7 @@ $t->patch_ok("/game/$game_id"  => form => $form)
     ->json_is('/owned_by', $form->{'owned_by'})
     ->json_is('/rom_name', $form->{'rom_name'})
     ->json_is('/locked_by', $form->{'locked_by'})
+    ->json_is('/locked', \1)
     ->json_is('/system', $form->{'system'});
 
 $t->get_ok("/game/$game_id" => form => { password => $form->{'new_password'} })
@@ -79,6 +80,10 @@ $t->get_ok("/game/$game_id" => form => { password => $form->{'new_password'} })
 
 $t->get_ok("/game/$game_id" => form => { password => "goodpass" })
     ->status_is(403);
+
+$t->patch_ok("/game/$game_id" => { locked => \0 })
+    ->json_is('/locked', undef)
+    ->json_is('/locked_by', undef);
 
 #PATCH for save_state
 my $randstring = "";
