@@ -124,7 +124,7 @@ sub update {
 	$game->lock($self->param('locked_by'));
     }
 
-    if (defined $self->param('locked') && $self->param('locked') eq "") {
+    if (defined $self->param('locked') && $self->param('locked')  "") {
 	$game->unlock();
     }
     

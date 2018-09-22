@@ -43,17 +43,24 @@
 	 ;; TODO: define public methods to:
 	 ;; lock the game
 	 (define/public (lock locked-by)
+	   (set-game-server-password! game-password)
 	   (update-game game-id #:locked-by locked-by))
 
 	 (define/public (locked?)
+	   (set-game-server-password! game-password)
 	   (let ([game-hash (read-game game-id)])
 	     (dict-ref game-hash 'locked)))
 	 
 	 (define/public (get-locked-by)
+	   (set-game-server-password! game-password)
 	   (let ([game-hash (read-game game-id)])
 	     (dict-ref game-hash 'locked_by)))
 
-	 ;; unlock game	 
+	 ;; unlock game
+	 (define/public (unlock)
+	   (set-game-server-password! game-password)
+	   (unlock-game game-id))
+	 
 	 ;; play the game
 	 ;; upload state
 	 ))
@@ -93,4 +100,9 @@
 	 	      (send g get-locked-by)
 	 	      "steve")
 
-	 )
+	 (test-not-exn "unlock game without exception"
+	 	       (thunk (send g unlock)))
+
+	 (test-equal? "game is unlocked after unlocking"
+	 	      (send g locked?)
+	 	      #f))

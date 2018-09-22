@@ -14,7 +14,9 @@
 	 create-game
 	 read-game
 	 update-game
-	 delete-game)
+	 delete-game
+	 lock-game
+	 unlock-game)
 
 (define game-server-password "goodpass")
 (define (set-game-server-password! pass)
@@ -45,7 +47,8 @@
 			     #:rom-name     [rom-name #f]
 			     #:system       [system #f]
 			     #:save-state   [save-state #f]
-			     #:locked-by    [locked-by #f])
+			     #:locked-by    [locked-by #f]
+			     #:locked       [locked 'null])
   
   (let ([dict `((password . ,game-server-password))])
     (cond [new-password (set! dict (dict-set dict 'new_password new-password))])
@@ -54,6 +57,8 @@
     (cond [system       (set! dict (dict-set dict 'system       system))])
     (cond [save-state   (set! dict (dict-set dict 'save_state   save-state))])
     (cond [locked-by    (set! dict (dict-set dict 'locked_by    locked-by))])
+    (cond [(not (eq? locked 'null))
+	                (set! dict (dict-set dict 'locked       locked))])
     dict))
 
 
@@ -63,13 +68,21 @@
 		     #:rom-name     [rom-name #f]
 		     #:system       [system #f]
 		     #:save-state   [save-state #f]
-		     #:locked-by    [locked-by #f])
+		     #:locked-by    [locked-by #f]
+		     #:locked       [locked 'null])
     (game-server-request "PATCH" (format "/game/~a" id) (build-update-params #:new-password new-password
 									     #:owned-by     owned-by
 									     #:rom-name     rom-name
 									     #:system       system
 									     #:save-state   save-state
-									     #:locked-by    locked-by)))
+									     #:locked-by    locked-by
+									     #:locked       locked)))
+
+(define (lock-game id locked-by)
+  (update-game id #:locked-by locked-by))
+
+(define (unlock-game id) 
+  (update-game id #:locked #f))
 
 (define (delete-game id)
   (game-server-request "DELETE" (format "/game/~a" id) `((password . ,game-server-password))))
@@ -149,7 +162,22 @@
 			   (thunk (read-game game-id)))
 
 	     (update-game game-id #:new-password oldpass)
-	     (set-game-server-password! oldpass)))
+	     (set-game-server-password! oldpass)
+
+	     (define locked-by "jozef")
+	     
+	     (test-not-exn "can lock game without exception"
+			   (thunk (lock-game game-id locked-by)))
+
+	     (test-equal? "game actually locked after locking"
+			  (dict-ref (read-game game-id)
+				    'locked)
+			  #t)
+
+	     (test-equal? (format "game locked by '~a' after locking" locked-by)
+			 (dict-ref (read-game game-id)
+				   'locked_by)
+			 locked-by)))
 
 	 (define (delete-tests)
 	   (test-not-exn "no exception deleting game"
