@@ -211,13 +211,13 @@ sub lock_game {
 
 sub unlock_game {
     my $numargs = @_;
-    die "Not enough arguments in lock_game (given only $numargs)" unless @ == 4;
+    die "Not enough arguments in lock_game (given only $numargs)" unless @ == 3;
     
-    my ($self, $dir, $id, $user) = @_;
+    my ($self, $dir, $id) = @_;
     my %game = $self->get_game($dir, $id);
 
     if ($game{'locked'}) {	
-	unlink $game{'lock_file'};
+	unlink $game{'lock_file'};	
     }
     
     return $self->get_game($dir, $id);

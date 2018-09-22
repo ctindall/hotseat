@@ -47,6 +47,10 @@ ok($game->lock('bill'), 'can lock a game without errors');
 ok($game->locked, 'game is actually locked after locking');
 is($game->locked_by, 'bill', 'game is locked by the right user after locking');
 
+ok(!$game->unlock(), "unlocking game works");
+is($game->locked_by, undef, "locked_by undefined afer unlock");
+is($game->locked, undef, "game not locked after unlock");
+
 my $randstring = "";
 foreach my $i (0..(1024)) {
     $randstring .= chr(int(rand(255)));

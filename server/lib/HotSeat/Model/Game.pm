@@ -69,6 +69,14 @@ sub lock {
     return $game{'locked'};
 }
 
+sub unlock {
+    my ($self) = @_;
+
+    my %game = $gm->unlock_game($self->{'games_dir'}, $self->game_id);
+
+    return $game{'locked'};
+}
+
 sub password_ok {
     my ($self, $pass) = @_;
 
@@ -141,7 +149,7 @@ sub locked {
     my ($self) = @_;
     my %game = $gm->get_game($self->{'games_dir'}, $self->game_id);
     
-    return $game{'locked'};
+    return $game{'locked'} ? 1 : undef;
 }
 
 sub save_state {
