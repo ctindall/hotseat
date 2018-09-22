@@ -44,7 +44,8 @@
 			     #:owned-by     [owned-by #f]
 			     #:rom-name     [rom-name #f]
 			     #:system       [system #f]
-			     #:save-state   [save-state #f])
+			     #:save-state   [save-state #f]
+			     #:locked-by    [locked-by #f])
   
   (let ([dict `((password . ,game-server-password))])
     (cond [new-password (set! dict (dict-set dict 'new_password new-password))])
@@ -52,6 +53,7 @@
     (cond [rom-name     (set! dict (dict-set dict 'rom_name     rom-name))])
     (cond [system       (set! dict (dict-set dict 'system       system))])
     (cond [save-state   (set! dict (dict-set dict 'save_state   save-state))])
+    (cond [locked-by    (set! dict (dict-set dict 'locked_by    locked-by))])
     dict))
 
 
@@ -60,12 +62,14 @@
 		     #:owned-by     [owned-by #f]
 		     #:rom-name     [rom-name #f]
 		     #:system       [system #f]
-		     #:save-state   [save-state #f])
+		     #:save-state   [save-state #f]
+		     #:locked-by    [locked-by #f])
     (game-server-request "PATCH" (format "/game/~a" id) (build-update-params #:new-password new-password
 									     #:owned-by     owned-by
 									     #:rom-name     rom-name
 									     #:system       system
-									     #:save-state   save-state)))
+									     #:save-state   save-state
+									     #:locked-by    locked-by)))
 
 (define (delete-game id)
   (game-server-request "DELETE" (format "/game/~a" id) `((password . ,game-server-password))))
@@ -117,7 +121,8 @@
 					     #:rom-name "excitebike.nes.rom"
 					     #:owned-by "goodowner"
 					     #:system "genesis"
-					     #:save-state  "123499292929")))
+					     #:save-state  "123499292929"
+					     #:locked-by "tony")))
 	   (let ([game (read-game game-id)]
 		 [oldpass game-server-password]
 		 [newpass "justabetterpass"])
@@ -133,6 +138,9 @@
 
 	     (test-equal? "update successfully changes save_state"
 			  (hash-ref game 'save_state) "123499292929")
+
+	     (test-equal? "update successfully changes locked_by"
+			  (hash-ref game 'locked_by) "tony")
 
 	     (update-game game-id #:new-password newpass)
 	     (set-game-server-password! newpass)

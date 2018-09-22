@@ -64,12 +64,14 @@ my $form =  { password => "goodpass",
 	      new_password => "newpass", 
 	      owned_by => "revolver_ocelot",
 	      rom_name => "animaniacs.rom",
+	      locked_by => "jill",
 	      system => "genesis" };
 
 $t->patch_ok("/game/$game_id"  => form => $form)
     ->status_is(200)
     ->json_is('/owned_by', $form->{'owned_by'})
     ->json_is('/rom_name', $form->{'rom_name'})
+    ->json_is('/locked_by', $form->{'locked_by'})
     ->json_is('/system', $form->{'system'});
 
 $t->get_ok("/game/$game_id" => form => { password => $form->{'new_password'} })

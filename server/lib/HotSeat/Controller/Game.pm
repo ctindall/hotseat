@@ -120,6 +120,10 @@ sub update {
 	$game->save_state($self->param('save_state'));
     }
 
+    if (defined $self->param('locked_by')) {
+	$game->lock($self->param('locked_by'));
+    }
+
     #return the new object
     return $self->render(json => {
 	game_id    => $game->game_id,

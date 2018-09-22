@@ -42,9 +42,20 @@
 
 	 ;; TODO: define public methods to:
 	 ;; lock the game
+	 (define/public (lock locked-by)
+	   (update-game game-id #:locked-by locked-by))
+
+	 (define/public (locked?)
+	   (let ([game-hash (read-game game-id)])
+	     (dict-ref game-hash 'locked)))
+	 
+	 (define/public (get-locked-by)
+	   (let ([game-hash (read-game game-id)])
+	     (dict-ref game-hash 'locked_by)))
+
+	 ;; unlock game	 
 	 ;; play the game
 	 ;; upload state
-	 ;; unlock game
 	 ))
 
 
@@ -66,4 +77,20 @@
 				   [rom-name "eliminator_boat_duel.nes.rom"]
 				   [system 'nes]
 				   [owner "cam"]
-				   [password "camspass"]))))
+				   [password "camspass"])))
+
+
+	 (define g (new game% [id game-id] [password "goodpass"]))
+	 
+	 (test-not-exn "lock game without exception"
+		       (thunk (send g lock "steve")))
+
+	 (test-equal? "game is actually locked after locking"
+		      (send g locked?)
+		      #t)
+	 
+	 (test-equal? "game is locked by the right name after locking"
+	 	      (send g get-locked-by)
+	 	      "steve")
+
+	 )
