@@ -1,6 +1,8 @@
 {
-    "emulator":"bgb.exe",
+    "emulator":"test-emulator.sh",
     "save-file-flag": "-rom",
+    "rom-file-flag": "-rom",
     "post-play-state-args": ["-stateonexit", "post_play_state.sna"],
     "post-play-state-path": "post_play_state.sna"
+
 }
