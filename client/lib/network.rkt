@@ -25,10 +25,10 @@
   (set! game-server-url url))
 
 (define (game-server-request method path params)
-  (let*-values ([(status headers port) (http-sendrecv/url (string->url (string-append game-server-url path))
-							  #:method method
-							  #:headers '("Content-Type: application/x-www-form-urlencoded")
-							  #:data (alist->form-urlencoded params))])
+  (let-values ([(status headers port) (http-sendrecv/url (string->url (string-append game-server-url path))
+							 #:method method
+							 #:headers '("Content-Type: application/x-www-form-urlencoded")
+							 #:data (alist->form-urlencoded params))])
     (read-json port)))
 
 (define (create-game rom-name system owner password)
@@ -105,7 +105,11 @@
 	   		 (thunk (read-game game-id)))
 	   
 	   (test-pred "read-game returns a hash"
-		      hash? (read-game game-id)))
+		      hash? (read-game game-id))
+
+	   (test-not-false "read-game returns a hash with an 'owned_by key"
+			   (dict-ref (read-game game-id)
+				     'owned_by)))
 
 	 (define (update-tests)
 	   (test-not-exn "update game doesn't raise exception"
@@ -146,7 +150,6 @@
 	   (test-equal? "no such game after delete"
 	   		(dict-ref (dict-ref (read-game game-id) 'errors) 'detail)
 	   		"No such game."))
-
 	 
 	 (set-tests)
 	 (create-tests)

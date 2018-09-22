@@ -34,6 +34,7 @@ sub create {
 	game_id    => $game->game_id,
 	locked     => $game->locked ? \1 : \0,
 	locked_by  => $game->locked_by,
+	owned_by   => $game->owner,
 	rom_name   => $game->rom,
 	system     => $game->system,
 	save_state => $game->save_state,
