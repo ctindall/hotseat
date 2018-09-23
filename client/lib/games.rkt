@@ -72,11 +72,7 @@
 	   ;;encode post-play-state file, upload it, and unlock the game
 	   (update-game game-id
 			#:save-state (send this get-post-play-state)
-			#:locked #f))
-	 
-	 ;; TODO: define public methods to:	 	 
-	 ;; upload state
-	 ))
+			#:locked #f))))
 
 
 (module+ test
@@ -125,5 +121,4 @@
 	 
 	 (test-equal? "get back the right bytes after syncing state"
 		      (bytes->string/utf-8 (base64-decode (string->bytes/utf-8 (send g get-post-play-state))))
-		      "here's some bytes")
-		      )
+		      "here's some bytes"))
