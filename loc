@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "$(wc -l $(find -name \*rkt -not -name \.\#\*) | tail -n 1 | awk '{print $1}') lines of Racket"
+echo "$(wc -l $(find -name \*pl -o -name \*\.t -o -name \*pm) | tail -n 1 | awk '{print $1}') lines of Perl"
