@@ -1,11 +1,7 @@
 #lang racket
-(require "network.rkt")
-
-(define (maybe-symbol->string wut)
-  (if (string? wut)
-      wut
-      (symbol->string wut)))
-
+(require "util.rkt"
+	 "network.rkt"
+	 "systems.rkt")
 
 (define game%
   (class object%
@@ -18,9 +14,9 @@
 			 game-system)
 	   (values id
 		   password
-		   #f
-		   #f
-		   #f))
+		   owner
+		   rom-name
+		   system))
 	 
 	 (cond [(and new? rom-name system owner password) ;;creating a new game from scratch
 		(define game-hash (create-game rom-name (symbol->string system) owner password))
@@ -28,7 +24,7 @@
 		(set! game-password password)
 		(set! game-owner    (dict-ref game-hash 'owned_by))
 		(set! game-rom-name (dict-ref game-hash 'rom_name))
-		(set! game-system   (dict-ref game-hash 'system))]
+		(set! game-system   (new system% [system-name (dict-ref game-hash 'system)]))]
  
 
 	       [(and id password) ;;reading an existing game from the server
@@ -36,12 +32,10 @@
 		(define game-hash (read-game id))
 		(set! game-owner    (dict-ref game-hash 'owned_by))
 		(set! game-rom-name (dict-ref game-hash 'rom_name))
-		(set! game-system   (dict-ref game-hash 'system))]
+		(set! game-system   (new system% [system-name (dict-ref game-hash 'system)]))]
 
 	       [else (raise-arguments-error 'game% "Incorrect usage of (new game%). Need either enough arguments to create a new game from scratch (new? rom-name system owner pass) or a game-id and password.")])
 
-	 ;; TODO: define public methods to:
-	 ;; lock the game
 	 (define/public (lock locked-by)
 	   (set-game-server-password! game-password)
 	   (update-game game-id #:locked-by locked-by))
@@ -56,12 +50,15 @@
 	   (let ([game-hash (read-game game-id)])
 	     (dict-ref game-hash 'locked_by)))
 
-	 ;; unlock game
 	 (define/public (unlock)
 	   (set-game-server-password! game-password)
 	   (unlock-game game-id))
-	 
+
+	 ;; TODO: define public methods to:	 
 	 ;; play the game
+	 (define/public (play-game)
+	   (send game-system start-emulator game-rom-name))
+	 
 	 ;; upload state
 	 ))
 
@@ -70,7 +67,7 @@
 	 (require rackunit)
 
 	 (define game-id (dict-ref (create-game "pokemon_burnt_umber.gb"
-						"intellivision"
+						"test_system"
 						"tony"
 						"goodpass")
 				   'game_id))
@@ -81,8 +78,8 @@
 	 (test-not-exn "can create game from scratch without exception"
 		       (thunk (new game%
 				   [new? #t]
-				   [rom-name "eliminator_boat_duel.nes.rom"]
-				   [system 'nes]
+				   [rom-name "test_game.rom"]
+				   [system 'test_system]
 				   [owner "cam"]
 				   [password "camspass"])))
 
@@ -105,4 +102,7 @@
 
 	 (test-equal? "game is unlocked after unlocking"
 	 	      (send g locked?)
-	 	      #f))
+	 	      #f)
+
+	 (test-not-exn "can open emulator without exception"
+		       (thunk (send g play-game))))

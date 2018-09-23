@@ -7,7 +7,8 @@
 
 (provide system%)
 
-(require json)
+(require "util.rkt"
+	 json)
 
 ;; This needs to account for:
 ;; 1) the case where the main hotseat-client.rkt (or exe) is run but also
@@ -29,7 +30,7 @@
 	 (super-new)
 	 (init system-name)
 	 
-	 (define system system-name)
+	 (define system (maybe-string->symbol system-name))
 	 (define emulator-proc #f)
 	   
 	 (define/public (get-system-dir)
@@ -40,7 +41,7 @@
 	   
 	 (define/public (get-emulator-path)
 	   (build-path (send this get-system-dir)
-		       (string->path (dict-ref (read-system system)
+		       (string->path (dict-ref (send this get-config-hash)
 					       'emulator))))
 	 
 	 (define/public (get-save-file-flag)

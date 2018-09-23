@@ -115,7 +115,12 @@
 							       "intellivision"
 							       "tony"
 							       "bestpass") 'game_id))
-			  (set-game-server-password! "bestpass"))))
+			  (set-game-server-password! "bestpass")))
+
+	   (define game-hash (read-game game-id))
+	   (test-equal? "rom-name is right after creation"
+			(dict-ref game-hash 'rom_name)
+			"pokemon_burnt_umber.gb"))
 	 
 	 (define (read-tests)
 	   (test-not-exn "read-game doesn't raise exception"

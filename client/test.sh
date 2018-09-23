@@ -13,7 +13,10 @@ pid=$(ps fauxww | grep hot_seat\ daemon | grep -v grep | awk '{print $2}')
 
 success=0
 #run the client tests
-for f in lib/network.rkt lib/games.rkt lib/systems.rkt; do
+for f in  lib/games.rkt \
+          lib/util.rkt \
+          lib/network.rkt \
+          lib/systems.rkt; do
     # Looping to control the order of tests, and to get better reporting on tests in each file
     if ! raco test $f; then
 	success=255
