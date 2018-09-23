@@ -1,7 +1,8 @@
 #lang racket
 (require "util.rkt"
 	 "network.rkt"
-	 "systems.rkt")
+	 "systems.rkt"
+	 net/base64)
 
 (define game%
   (class object%
@@ -38,7 +39,7 @@
 
 	 (define/public (lock locked-by)
 	   (set-game-server-password! game-password)
-	   (update-game game-id #:locked-by locked-by))
+	   (lock-game id locked-by))
 
 	 (define/public (locked?)
 	   (set-game-server-password! game-password)
@@ -54,11 +55,26 @@
 	   (set-game-server-password! game-password)
 	   (unlock-game game-id))
 
-	 ;; TODO: define public methods to:	 
-	 ;; play the game
-	 (define/public (play-game)
-	   (send game-system start-emulator game-rom-name))
+	 (define/public (get-post-play-state) ;; returns it in base64
+	   (set-game-server-password! game-password)
+	   (define save-file-path (send game-system get-post-play-state-file-path))
+	   (define base64-state (bytes->string/utf-8 (base64-encode (file->bytes save-file-path) "")))
+	   base64-state)
 	 
+	 (define/public (play-game)
+	   (set-game-server-password! game-password)
+	   
+	   (send game-system start-emulator game-rom-name)
+
+	   ;;wait until user is done playing game
+	   (send game-system emulator-wait)
+
+	   ;;encode post-play-state file, upload it, and unlock the game
+	   (update-game game-id
+			#:save-state (send this get-post-play-state)
+			#:locked #f))
+	 
+	 ;; TODO: define public methods to:	 	 
 	 ;; upload state
 	 ))
 
@@ -105,4 +121,9 @@
 	 	      #f)
 
 	 (test-not-exn "can open emulator without exception"
-		       (thunk (send g play-game))))
+		       (thunk (send g play-game)))
+	 
+	 (test-equal? "get back the right bytes after syncing state"
+		      (bytes->string/utf-8 (base64-decode (string->bytes/utf-8 (send g get-post-play-state))))
+		      "here's some bytes")
+		      )

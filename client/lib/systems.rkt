@@ -57,7 +57,8 @@
 		     'rom-file-flag))
 	 
 	 (define/public (get-post-play-state-file-path)
-	   (build-path (dict-ref (send this get-config-hash)
+	   (build-path (send this get-system-dir)
+		       (dict-ref (send this get-config-hash)
 				 'post-play-state-path)))
 	 
 	 (define/public (start-emulator rom-name [save-file-path #f])
@@ -106,9 +107,9 @@
 		      (send gb get-post-play-state-args)
 		      `("-stateonexit" "post_play_state.sna"))
 
-	 (test-equal? "gameboy post-play-state-file reads correctly"
-		      (send gb get-post-play-state-file-path)
-		      (string->path "post_play_state.sna"))
+	 (test-true "gameboy post-play-state-file reads correctly"
+		      (string-suffix? (path->string (send gb get-post-play-state-file-path))
+				      "post_play_state.sna"))
 
 	 (define mock-system (new system% [system-name 'test_system]))
 
